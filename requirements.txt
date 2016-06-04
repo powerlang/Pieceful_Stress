@@ -1,0 +1,2 @@
+https://github.com/locustio/locust/archive/python3-justiniso.zip
+pyzmq

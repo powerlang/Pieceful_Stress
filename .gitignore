@@ -1,0 +1,9 @@
+.DS_Store
+*.DS_Store
+.idea/
+.idea/*
+__pychache__/
+*.pyc
+images/config.py
+media/*
+*/**/migrations/*
