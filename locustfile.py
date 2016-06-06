@@ -1,29 +1,24 @@
-import random
-from locust import HttpLocust, TaskSet
+from locust import HttpLocust, events
 
-import config
 import utils
-from reqs import UserReqs
 from tasks import ExploreTaskSet
 
 
-class LushuTaskSet(TaskSet):
-    tasks = {ExploreTaskSet: 10}
+def resetUsersHandler():
+    utils.clearUsers("explore")
 
-    def on_start(self):
-        if utils.maybeHappen():
-            return
 
-        email = random.choice(config.FAKE_EMAILS)
-        password = config.FAKE_USER_PASSWORD
-        token = UserReqs.authLogin(self.client, email, password) or \
-            UserReqs.authRegister(self.client, email, password)
-
-        if token:
-            self.client.headers["Authorization"] = "Token {}".format(token)
-
+events.locust_start_hatching += resetUsersHandler
 
 class LushuLocust(HttpLocust):
-    task_set = LushuTaskSet
-    min_wait = 5000
-    max_wait = 15000
+    task_set = ExploreTaskSet
+    weight = 30
+    min_wait = 10
+    max_wait = 150
+
+
+# class LushuTripLocust(HttpLocust):
+#     task_set = TripTaskSet
+#     weight = 10
+#     min_wait = 1000
+#     max_wait = 1000

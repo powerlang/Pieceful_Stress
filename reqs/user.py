@@ -26,6 +26,23 @@ def followUser(session, userId):
     return True
 
 
-def userBoxes(session, userId):
-    r = session.get("/user/{}/boxes/".format(userId), name="/user/[id]/boxes")
-    return utils.getResData(r, "boxes")
+def userBoxes(session, userId, q="", order=1, last="", start=0, count=24):
+    r = session.get("/user/{}/boxes/?q={}&order={}&last={}&start={}&count={}".format(userId, q, order, last, start, count),
+                    name="/user/[id]/boxes")
+    return utils.getResData(r, ["boxes", "hasMore"])
+
+
+def userCards(session, userId, q="", tag=0, order=1, last="", start=0, count=24):
+    r = session.get("/user/{}/cards/?q={}&tag={}&order={}&last={}&start={}&count={}".format(userId, q, tag, order, last, start, count),
+                    name="/user/[id]/cards")
+    return utils.getResData(r, ["cards", "hasMore"])
+
+
+def userBackpacks(session, userId):
+    r = session.get("/user/{}/backpacks/".format(userId), name="/user/[id]/backpacks")
+    return utils.getResData(r, "backpacks")
+
+
+def userInfo(session, userId):
+    r = session.get("/user/{}/".format(userId), name="/user/[id]")
+    return utils.getResData(r, "user")

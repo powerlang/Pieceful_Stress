@@ -11,9 +11,9 @@ def newCard(session):
 
     userId = account["id"]
     boxId = None
-    boxes = UserReqs.userBoxes(session, userId)
-    if boxes and utils.maybeHappen():
-        boxId = random.choice(boxes)["id"]
+    result = UserReqs.userBoxes(session, userId)
+    if result and result["boxes"] and utils.maybeHappen():
+        boxId = random.choice(result["boxes"])["id"]
 
     if boxId is None and utils.maybeHappen():
         box = BoxReqs.newBox(session, {})
@@ -37,16 +37,29 @@ def newCard(session):
 
 
 def cardDetail(session, cardId):
+    result = {"cards": [], "boxes": [], "pois": [], "destinations": []}
+
     card = CardReqs.getCard(session, cardId)
     if not card:
-        return
+        return result
+
+    if card.get("pois"):
+        result["pois"] = [poi["id"] for poi in card["pois"]]
+
+    if card.get("destination"):
+        result["destinations"] = [card["destination"]["id"]]
 
     CardReqs.getCardComments(session, cardId)
-    CardReqs.getRelatedCards(session, cardId)
-    CardReqs.getRelatedBoxes(session, cardId)
+    cards = CardReqs.getRelatedCards(session, cardId)
+    if cards:
+        result["cards"] = [card["id"] for card in cards]
+
+    boxes = CardReqs.getRelatedBoxes(session, cardId)
+    if boxes:
+        result["boxes"] = [box["id"] for box in boxes]
 
     if utils.isAnonymous(session):
-        return
+        return result
 
     followed = UserReqs.userFollowed(session, card["owner"]["id"])
     if not followed and utils.rarelyHappen():
@@ -57,17 +70,18 @@ def cardDetail(session, cardId):
         gevent.sleep(1)
         CardReqs.likeCard(session, cardId)
 
+    account = UserReqs.authRefreshStatus(session)
+    if not account:
+        return result
+
     if not card["clipped"] and utils.rarelyHappen():
         gevent.sleep(1)
-        account = UserReqs.authRefreshStatus(session)
-        if not account:
-            return
 
         userId = account["id"]
         boxId = None
-        boxes = UserReqs.userBoxes(session, userId)
-        if boxes and utils.maybeHappen():
-            boxId = random.choice(boxes)["id"]
+        data = UserReqs.userBoxes(session, userId)
+        if data and data["boxes"] and utils.maybeHappen():
+            boxId = random.choice(data["boxes"])["id"]
 
         if boxId is None and utils.maybeHappen():
             box = BoxReqs.newBox(session, {})
@@ -75,3 +89,5 @@ def cardDetail(session, cardId):
                 boxId = box["id"]
 
         CardReqs.clipCard(session, cardId, boxId)
+
+    return result
